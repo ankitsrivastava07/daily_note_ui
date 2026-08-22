@@ -49,10 +49,6 @@ function DailyNoteForm() {
         }));
     };
 
-    const handlePrioritySelect = (priorityValue) => {
-        setFormData((prev) => ({ ...prev, priority: priorityValue }));
-    };
-
     const handleAddCategory = () => {
         const trimmed = customCategoryInput.trim();
         if (trimmed) {
@@ -103,18 +99,12 @@ function DailyNoteForm() {
         alert("Note saved successfully!");
     };
 
-    const priorityOptions = [
-        { label: 'Low', value: 'Low', activeClass: 'btn-success', inactiveClass: 'btn-outline-success' },
-        { label: 'Medium', value: 'Medium', activeClass: 'btn-warning text-dark', inactiveClass: 'btn-outline-warning' },
-        { label: 'High', value: 'High', activeClass: 'btn-danger', inactiveClass: 'btn-outline-danger' },
-    ];
-
     const colorPresets = ['#0d6efd', '#6f42c1', '#d63384', '#fd7e14', '#198754', '#20c997'];
 
     return (
         <div className="container py-4" style={{ maxWidth: '760px' }}>
-            <div
-                className="card shadow border-0 rounded-3 overflow-hidden"
+            <div 
+                className="card shadow border-0 rounded-3 overflow-hidden" 
                 style={{ borderTop: `6px solid ${formData.colorAccent}` }}
             >
                 {/* Header */}
@@ -123,7 +113,7 @@ function DailyNoteForm() {
                         <h5 className="mb-0 fw-bold text-dark">Create New Note</h5>
                         <small className="text-muted">Detailed task, project, and meeting notes</small>
                     </div>
-
+                    
                     <div className="d-flex gap-2">
                         <div className="form-check form-switch bg-light border px-3 py-1 rounded-pill">
                             <input
@@ -157,14 +147,14 @@ function DailyNoteForm() {
 
                 <div className="card-body p-4">
                     <form onSubmit={handleSubmit}>
-
+                        
                         {/* Title & Color Accent */}
                         <div className="mb-3">
                             <div className="d-flex justify-content-between align-items-center mb-1">
                                 <label htmlFor="title" className="form-label fw-semibold mb-0 fs-6">
                                     Title <span className="text-danger">*</span>
                                 </label>
-
+                                
                                 <div className="d-flex align-items-center gap-1">
                                     <small className="text-muted me-1">Theme Color:</small>
                                     {colorPresets.map((color) => (
@@ -195,24 +185,22 @@ function DailyNoteForm() {
                             />
                         </div>
 
-                        {/* Priority Selector */}
+                        {/* Priority Level Dropdown */}
                         <div className="mb-3">
-                            <label className="form-label fw-semibold small d-block mb-1">Priority Level</label>
-                            <div className="btn-group w-100" role="group">
-                                {priorityOptions.map((option) => (
-                                    <button
-                                        key={option.value}
-                                        type="button"
-                                        onClick={() => handlePrioritySelect(option.value)}
-                                        className={`btn btn-sm ${formData.priority === option.value
-                                                ? option.activeClass
-                                                : option.inactiveClass
-                                            } fw-semibold`}
-                                    >
-                                        {formData.priority === option.value ? '✓ ' : ''}{option.label}
-                                    </button>
-                                ))}
-                            </div>
+                            <label htmlFor="priority" className="form-label fw-semibold small mb-1">
+                                Priority Level
+                            </label>
+                            <select
+                                id="priority"
+                                name="priority"
+                                value={formData.priority}
+                                onChange={handleInputChange}
+                                className="form-select form-select-sm"
+                            >
+                                <option value="Low">🟢 Low</option>
+                                <option value="Medium">🟡 Medium</option>
+                                <option value="High">🔴 High</option>
+                            </select>
                         </div>
 
                         {/* Category (Custom Input + Select), Status, Project & Visibility */}
