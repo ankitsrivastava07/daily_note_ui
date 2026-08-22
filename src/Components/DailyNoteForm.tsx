@@ -1,6 +1,6 @@
 import { useState } from 'react';
 
-function CreateNotePage() {
+function DailyNoteForm() {
     const getCurrentDateTime = () => {
         const now = new Date();
         now.setMinutes(now.getMinutes() - now.getTimezoneOffset());
@@ -33,6 +33,10 @@ function CreateNotePage() {
         description: '',
     });
 
+    const [categories, setCategories] = useState(['Work', 'Personal', 'Ideas', 'Meeting', 'Research']);
+    const [customCategoryInput, setCustomCategoryInput] = useState('');
+    const [isCreatingCategory, setIsCreatingCategory] = useState(false);
+
     const [todoList, setTodoList] = useState([]);
     const [todoInput, setTodoInput] = useState('');
     const [selectedFiles, setSelectedFiles] = useState([]);
@@ -47,6 +51,18 @@ function CreateNotePage() {
 
     const handlePrioritySelect = (priorityValue) => {
         setFormData((prev) => ({ ...prev, priority: priorityValue }));
+    };
+
+    const handleAddCategory = () => {
+        const trimmed = customCategoryInput.trim();
+        if (trimmed) {
+            if (!categories.includes(trimmed)) {
+                setCategories((prev) => [...prev, trimmed]);
+            }
+            setFormData((prev) => ({ ...prev, category: trimmed }));
+            setCustomCategoryInput('');
+            setIsCreatingCategory(false);
+        }
     };
 
     const handleAddTodo = () => {
@@ -79,8 +95,12 @@ function CreateNotePage() {
 
     const handleSubmit = (e) => {
         e.preventDefault();
-        console.log("Submitted Note Payload:", { ...formData, todos: todoList, files: selectedFiles });
-        alert("Note created successfully!");
+        console.log("Submitted Note Payload:", {
+            ...formData,
+            todos: todoList,
+            files: selectedFiles,
+        });
+        alert("Note saved successfully!");
     };
 
     const priorityOptions = [
@@ -93,8 +113,8 @@ function CreateNotePage() {
 
     return (
         <div className="container py-4" style={{ maxWidth: '760px' }}>
-            <div 
-                className="card shadow border-0 rounded-3 overflow-hidden" 
+            <div
+                className="card shadow border-0 rounded-3 overflow-hidden"
                 style={{ borderTop: `6px solid ${formData.colorAccent}` }}
             >
                 {/* Header */}
@@ -103,7 +123,7 @@ function CreateNotePage() {
                         <h5 className="mb-0 fw-bold text-dark">Create New Note</h5>
                         <small className="text-muted">Detailed task, project, and meeting notes</small>
                     </div>
-                    
+
                     <div className="d-flex gap-2">
                         <div className="form-check form-switch bg-light border px-3 py-1 rounded-pill">
                             <input
@@ -137,14 +157,14 @@ function CreateNotePage() {
 
                 <div className="card-body p-4">
                     <form onSubmit={handleSubmit}>
-                        
+
                         {/* Title & Color Accent */}
                         <div className="mb-3">
                             <div className="d-flex justify-content-between align-items-center mb-1">
                                 <label htmlFor="title" className="form-label fw-semibold mb-0 fs-6">
                                     Title <span className="text-danger">*</span>
                                 </label>
-                                
+
                                 <div className="d-flex align-items-center gap-1">
                                     <small className="text-muted me-1">Theme Color:</small>
                                     {colorPresets.map((color) => (
@@ -184,11 +204,10 @@ function CreateNotePage() {
                                         key={option.value}
                                         type="button"
                                         onClick={() => handlePrioritySelect(option.value)}
-                                        className={`btn btn-sm ${
-                                            formData.priority === option.value
+                                        className={`btn btn-sm ${formData.priority === option.value
                                                 ? option.activeClass
                                                 : option.inactiveClass
-                                        } fw-semibold`}
+                                            } fw-semibold`}
                                     >
                                         {formData.priority === option.value ? '✓ ' : ''}{option.label}
                                     </button>
@@ -196,23 +215,50 @@ function CreateNotePage() {
                             </div>
                         </div>
 
-                        {/* Category, Status, Project & Visibility */}
+                        {/* Category (Custom Input + Select), Status, Project & Visibility */}
                         <div className="row g-2 mb-3">
                             <div className="col-sm-3">
                                 <label htmlFor="category" className="form-label fw-semibold small mb-1">Category</label>
-                                <select
-                                    id="category"
-                                    name="category"
-                                    value={formData.category}
-                                    onChange={handleInputChange}
-                                    className="form-select form-select-sm"
-                                >
-                                    <option value="Work">💼 Work</option>
-                                    <option value="Personal">🏠 Personal</option>
-                                    <option value="Ideas">💡 Ideas</option>
-                                    <option value="Meeting">📅 Meeting</option>
-                                    <option value="Research">🔍 Research</option>
-                                </select>
+                                {!isCreatingCategory ? (
+                                    <select
+                                        id="category"
+                                        name="category"
+                                        value={formData.category}
+                                        onChange={(e) => {
+                                            if (e.target.value === '__add_new__') {
+                                                setIsCreatingCategory(true);
+                                            } else {
+                                                handleInputChange(e);
+                                            }
+                                        }}
+                                        className="form-select form-select-sm"
+                                    >
+                                        {categories.map((cat) => (
+                                            <option key={cat} value={cat}>{cat}</option>
+                                        ))}
+                                        <option value="__add_new__" className="fw-bold text-primary">
+                                            + Add Custom...
+                                        </option>
+                                    </select>
+                                ) : (
+                                    <div className="input-group input-group-sm">
+                                        <input
+                                            type="text"
+                                            value={customCategoryInput}
+                                            onChange={(e) => setCustomCategoryInput(e.target.value)}
+                                            onKeyDown={(e) => e.key === 'Enter' && (e.preventDefault(), handleAddCategory())}
+                                            className="form-control"
+                                            placeholder="New Category"
+                                            autoFocus
+                                        />
+                                        <button type="button" onClick={handleAddCategory} className="btn btn-primary btn-sm">
+                                            ✓
+                                        </button>
+                                        <button type="button" onClick={() => setIsCreatingCategory(false)} className="btn btn-outline-secondary btn-sm">
+                                            ✕
+                                        </button>
+                                    </div>
+                                )}
                             </div>
 
                             <div className="col-sm-3">
@@ -349,7 +395,7 @@ function CreateNotePage() {
                             </div>
                         </div>
 
-                        {/* Reminder Settings (Includes Custom DateTime Option) */}
+                        {/* Reminder Settings */}
                         <div className="row g-2 mb-3 align-items-center">
                             <div className="col-sm-5">
                                 <label htmlFor="reminderAlert" className="form-label fw-semibold small mb-1">
@@ -528,7 +574,7 @@ function CreateNotePage() {
                             </div>
                         </div>
 
-                        {/* Attachments */}
+                        {/* File Attachments */}
                         <div className="mb-3">
                             <label htmlFor="file-upload" className="form-label fw-semibold small mb-1">Attach Files</label>
                             <input
@@ -583,4 +629,4 @@ function CreateNotePage() {
     );
 }
 
-export default CreateNotePage;
+export default DailyNoteForm;
