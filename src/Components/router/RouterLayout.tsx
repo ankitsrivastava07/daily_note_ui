@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import { createBrowserRouter, RouterProvider, Link, Outlet } from 'react-router-dom';
+import GetAllNote from '../GetAllNote';
 
 // Layout component with shared navigation and an Outlet for dynamic pages
 function Layout() {
@@ -8,6 +9,7 @@ function Layout() {
     <div>
       <nav style={{ display: 'flex', gap: '12px', marginBottom: '16px' }}>
         <Link to="/">Home</Link>
+        <Link to="/all-note">All Notes</Link>
         <Link to="/about">About</Link>
       </nav>
       <hr />
@@ -27,6 +29,7 @@ const router = createBrowserRouter([
     element: <Layout />,
     children: [
       { index: true, element: <Home /> },
+      {path: 'all-note', element: <GetAllNote></GetAllNote>},
       { path: 'about', element: <About /> }
     ],
   },
