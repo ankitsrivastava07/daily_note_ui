@@ -12,7 +12,7 @@ import CreateShortNote from './Components/CreateShortNote';
 import AllWorkspace from './Components/AllWorkspace';
 import TodayTask from './Components/TodayTask';
 import TaskComponent from './Components/TaskComponent';
-import GetAllTask from './Components/GetAllTasks';
+import GetAllTask from './Components/GetAllTask';
 
 
 function App() {
