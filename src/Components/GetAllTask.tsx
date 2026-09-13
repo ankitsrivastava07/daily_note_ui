@@ -61,10 +61,7 @@ function GetAllTask() {
             console.log("SEARCH:", searchValue);
 
             const response = await fetch(url, {
-                method: "GET",
-                headers: {
-                    "Content-Type": "application/json"
-                }
+                method: "GET"
             });
 
             if (!response.ok) {
