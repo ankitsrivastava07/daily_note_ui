@@ -74,7 +74,7 @@ function CreateShortNote() {
 
         console.log("Form Submitted Successfully!", inputValue);
 
-        fetch("http://localhost:9091/api/v1/short-note", {
+        fetch(`${import.meta.env.VITE_API_BASE_URL}/api/v1/short-note`, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",

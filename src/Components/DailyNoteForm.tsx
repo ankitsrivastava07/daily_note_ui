@@ -318,7 +318,7 @@ function DailyNoteForm() {
 
         // 1. Ask backend for presigned URL
         const presignedResponse = await fetch(
-            `http://localhost:9095/api/v1/note/${noteId}/document`,
+            `${import.meta.env.VITE_API_BASE_URL}/api/v1/note/${noteId}/document`,
             {
                 method: 'POST',
 

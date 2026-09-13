@@ -51,7 +51,7 @@ function GetAllTask() {
             setMessage("");
 
             const url =
-                `http://localhost:9091/api/v1/user/${userId}/task` +
+                `${import.meta.env.VITE_API_BASE_URL}/api/v1/user/${userId}/task` +
                 `?limit=${limit}` +
                 `&lastId=${encodeURIComponent(lastId)}` +
                 `&search=${encodeURIComponent(searchValue)}`;

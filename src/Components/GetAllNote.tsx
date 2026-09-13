@@ -35,7 +35,7 @@ function GetAllNote() {
         try {
 
             const response = await fetch(
-                "http://localhost:9091/api/v1/daily-note",
+                `${import.meta.env.VITE_API_BASE_URL}/api/v1/daily-note`,
                 {
                     method: "GET",
                     headers: {

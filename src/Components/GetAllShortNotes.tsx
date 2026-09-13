@@ -17,7 +17,7 @@ function GetAllShortNotes() {
         try {
 
             const response = await fetch(
-                "http://localhost:9091/api/v1/short-note",
+                `${import.meta.env.VITE_API_BASE_URL}/api/v1/short-note`,
                 {
                     method: "GET",
                     headers: {

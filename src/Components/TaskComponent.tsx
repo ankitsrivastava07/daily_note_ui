@@ -80,7 +80,7 @@ function CreateTask() {
             console.log("Create Task Request:", requestBody);
 
             const response = await fetch(
-                `http://localhost:9091/api/v1/user/${userId}/task`,
+                `${import.meta.env.VITE_API_BASE_URL}/api/v1/user/${userId}/task`,
                 {
                     method: "POST",
                     headers: {
