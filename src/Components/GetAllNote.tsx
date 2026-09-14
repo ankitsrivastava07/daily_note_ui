@@ -39,7 +39,6 @@ function GetAllNote() {
                 {
                     method: "GET",
                     headers: {
-                        "Content-Type": "application/json",
                         userId: userId
                     }
                 }
