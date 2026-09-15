@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from "react";
 import "./CSS/GetAllTask.css";
 
-// Interface defining the shape of a Task object returned by the API
 interface Task {
     id: string;
     title?: string;
@@ -13,16 +12,23 @@ interface Task {
     dueDate?: string;
     dueTime?: string;
     meridiem?: string;
+    version?: number;
 }
 
-// Interface for API Response envelope if applicable
-interface ApiResponse {
-    data?: Task[];
-    message?: string;
+interface PageResponse {
+    content: Task[];
+    totalElements: number;
+    totalPages: number;
+    size: number;
+    number: number;
+    first: boolean;
+    last: boolean;
+    numberOfElements: number;
+    empty: boolean;
 }
 
 function GetAllTask() {
-    // Explicitly typed state variables
+
     const [tasks, setTasks] = useState<Task[]>([]);
     const [loading, setLoading] = useState<boolean>(false);
     const [message, setMessage] = useState<string>("");
@@ -30,35 +36,31 @@ function GetAllTask() {
     const [limit, setLimit] = useState<number>(5);
     const [search, setSearch] = useState<string>("");
 
-    const [nextLastId, setNextLastId] = useState<string>("");
-    const [currentLastId, setCurrentLastId] = useState<string>("");
+    const [page, setPage] = useState<number>(0);
+    const [totalPages, setTotalPages] = useState<number>(0);
+    const [totalElements, setTotalElements] = useState<number>(0);
 
-    const [cursorHistory, setCursorHistory] = useState<string[]>([]);
+    const userId =
+        localStorage.getItem("userId") || "ankit0397";
 
-    const [pageNumber, setPageNumber] = useState<number>(1);
-
-    const userId = localStorage.getItem("userId") || "ankit0397";
-
-    // =========================================
-    // GET TASKS
-    // =========================================
     const getAllTasks = async (
-        lastId: string = "",
+        pageNumber: number = 0,
         searchValue: string = search
     ) => {
+
         try {
+
             setLoading(true);
             setMessage("");
 
-            const url =
-                `${import.meta.env.VITE_API_BASE_URL}/api/v1/user/${userId}/task` +
-                `?limit=${limit}` +
-                `&lastId=${encodeURIComponent(lastId)}` +
-                `&search=${encodeURIComponent(searchValue)}`;
+            let url =
+                `${import.meta.env.VITE_SEARCH_API_BASE_URL}/api/v1/user/${userId}/task` +
+                `?page=${pageNumber}` +
+                `&size=${limit}`;
 
-            console.log("API CALL:", url);
-            console.log("LAST ID SENT:", lastId);
-            console.log("SEARCH:", searchValue);
+            if (searchValue.trim()) {
+                url += `&search=${encodeURIComponent(searchValue.trim())}`;
+            }
 
             const response = await fetch(url, {
                 method: "GET"
@@ -70,137 +72,145 @@ function GetAllTask() {
                 );
             }
 
-            const result: ApiResponse = await response.json();
+            const result: PageResponse =
+                await response.json();
 
-            console.log("API RESPONSE:", result);
+            setTasks(result.content || []);
 
-            // =========================================
-            // API DATA HANDLER
-            // =========================================
-            if (Array.isArray(result?.data)) {
-                setTasks(result.data);
+            setPage(result.number ?? pageNumber);
 
-                // =====================================
-                // GET LAST RECORD ID
-                // =====================================
-                if (result.data.length > 0) {
-                    const lastRecord = result.data[result.data.length - 1];
-                    const newLastId = lastRecord?.id || "";
+            setTotalPages(
+                result.totalPages ?? 0
+            );
 
-                    console.log("NEW LAST ID:", newLastId);
-
-                    if (result.data.length < limit) {
-                        setNextLastId("");
-                    } else {
-                        setNextLastId(newLastId);
-                    }
-                } else {
-                    setNextLastId("");
-                }
-            } else {
-                setTasks([]);
-                setNextLastId("");
-            }
-
-            setCurrentLastId(lastId);
+            setTotalElements(
+                result.totalElements ?? 0
+            );
 
         } catch (error) {
-            console.error("Error fetching tasks:", error);
+
+            console.error(
+                "Error fetching tasks:",
+                error
+            );
+
             setTasks([]);
-            setNextLastId("");
-            setMessage("Failed to load tasks");
+            setTotalPages(0);
+            setTotalElements(0);
+
+            setMessage(
+                "Failed to load tasks"
+            );
+
         } finally {
+
             setLoading(false);
         }
     };
 
-    // =========================================
-    // INITIAL LOAD / LIMIT CHANGE
-    // =========================================
     useEffect(() => {
-        setPageNumber(1);
-        setCursorHistory([]);
-        setCurrentLastId("");
-        setNextLastId("");
 
-        getAllTasks("", search);
+        setPage(0);
+
+        getAllTasks(
+            0,
+            search
+        );
+
     }, [limit]);
 
-    // =========================================
-    // SEARCH HANDLERS
-    // =========================================
     const handleSearch = () => {
-        setPageNumber(1);
-        setCursorHistory([]);
-        setCurrentLastId("");
-        setNextLastId("");
 
-        getAllTasks("", search);
+        setPage(0);
+
+        getAllTasks(
+            0,
+            search
+        );
     };
 
-    const handleSearchKeyDown = (event: React.KeyboardEvent<HTMLInputElement>) => {
+    const handleSearchKeyDown = (
+        event: React.KeyboardEvent<HTMLInputElement>
+    ) => {
+
         if (event.key === "Enter") {
             handleSearch();
         }
     };
 
     const handleClearSearch = () => {
-        setSearch("");
-        setPageNumber(1);
-        setCursorHistory([]);
-        setCurrentLastId("");
-        setNextLastId("");
 
-        getAllTasks("", "");
+        setSearch("");
+        setPage(0);
+
+        getAllTasks(
+            0,
+            ""
+        );
     };
 
-    // =========================================
-    // PAGINATION HANDLERS
-    // =========================================
     const handleNext = () => {
-        console.log("NEXT LAST ID:", nextLastId);
 
-        if (!nextLastId) return;
+        if (page + 1 >= totalPages) {
+            return;
+        }
 
-        setCursorHistory((previous) => [...previous, currentLastId]);
-        setPageNumber((previous) => previous + 1);
+        const nextPage = page + 1;
 
-        getAllTasks(nextLastId, search);
+        setPage(nextPage);
+
+        getAllTasks(
+            nextPage,
+            search
+        );
     };
 
     const handlePrevious = () => {
-        if (cursorHistory.length === 0) return;
 
-        const historyCopy = [...cursorHistory];
-        const previousCursor = historyCopy.pop();
+        if (page === 0) {
+            return;
+        }
 
-        setCursorHistory(historyCopy);
-        setPageNumber((previous) => Math.max(1, previous - 1));
+        const previousPage = page - 1;
 
-        getAllTasks(previousCursor || "", search);
+        setPage(previousPage);
+
+        getAllTasks(
+            previousPage,
+            search
+        );
     };
 
-    const handleLimitChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
-        const newLimit = Number(event.target.value);
+    const handleLimitChange = (
+        event: React.ChangeEvent<HTMLSelectElement>
+    ) => {
+
+        const newLimit =
+            Number(event.target.value);
+
         setLimit(newLimit);
+        setPage(0);
     };
 
     const handleRefresh = () => {
-        setPageNumber(1);
-        setCursorHistory([]);
-        setCurrentLastId("");
-        setNextLastId("");
 
-        getAllTasks("", search);
+        getAllTasks(
+            page,
+            search
+        );
     };
 
     return (
+
         <div className="get-all-task-container">
-            {/* HEADER */}
+
             <div className="get-all-task-header">
+
                 <div>
                     <h2>All Tasks</h2>
-                    <p>View and manage your tasks</p>
+                    <p>
+                        View and manage your tasks
+                    </p>
                 </div>
 
                 <button
@@ -211,13 +221,15 @@ function GetAllTask() {
                 >
                     Refresh
                 </button>
+
             </div>
 
-            {/* TOOLBAR */}
             <div className="task-toolbar">
-                {/* PAGE SIZE */}
+
                 <div className="page-size-container">
+
                     <span>Show</span>
+
                     <select
                         value={limit}
                         onChange={handleLimitChange}
@@ -228,17 +240,19 @@ function GetAllTask() {
                         <option value={20}>20</option>
                         <option value={50}>50</option>
                     </select>
+
                     <span>entries</span>
+
                 </div>
 
-                {/* SEARCH */}
                 <div className="task-search-container">
+
                     <input
                         type="text"
                         value={search}
                         placeholder="Search tasks..."
                         className="task-search-input"
-                        onChange={(event: React.ChangeEvent<HTMLInputElement>) =>
+                        onChange={(event) =>
                             setSearch(event.target.value)
                         }
                         onKeyDown={handleSearchKeyDown}
@@ -254,6 +268,7 @@ function GetAllTask() {
                     </button>
 
                     {search && (
+
                         <button
                             type="button"
                             className="task-clear-button"
@@ -262,27 +277,45 @@ function GetAllTask() {
                         >
                             Clear
                         </button>
+
                     )}
+
                 </div>
+
             </div>
 
-            {/* LOADING */}
-            {loading && <div className="task-loading">Loading tasks...</div>}
-
-            {/* ERROR */}
-            {message && <div className="task-error">{message}</div>}
-
-            {/* NO DATA */}
-            {!loading && !message && tasks.length === 0 && (
-                <div className="no-task">No tasks found</div>
+            {loading && (
+                <div className="task-loading">
+                    Loading tasks...
+                </div>
             )}
 
-            {/* TABLE */}
+            {message && (
+                <div className="task-error">
+                    {message}
+                </div>
+            )}
+
+            {!loading &&
+                !message &&
+                tasks.length === 0 && (
+
+                    <div className="no-task">
+                        No tasks found
+                    </div>
+
+                )}
+
             {!loading && tasks.length > 0 && (
+
                 <>
+
                     <div className="task-table-wrapper">
+
                         <table className="task-table">
+
                             <thead>
+
                                 <tr>
                                     <th>#</th>
                                     <th>Title</th>
@@ -292,52 +325,98 @@ function GetAllTask() {
                                     <th>Due Date</th>
                                     <th>Due Time</th>
                                 </tr>
+
                             </thead>
+
                             <tbody>
-                                {tasks.map((task, index) => (
-                                    <tr key={task.id}>
-                                        <td>
-                                            {(pageNumber - 1) * limit + index + 1}
-                                        </td>
-                                        <td className="task-title-cell">
-                                            {task.title || task.name || "-"}
-                                        </td>
-                                        <td className="task-description-cell">
-                                            {task.description || task.content || "-"}
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={`priority-badge priority-${task.priority?.toLowerCase()}`}
-                                            >
-                                                {task.priority || "-"}
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <span
-                                                className={`status-badge status-${task.status?.toLowerCase()}`}
-                                            >
-                                                {task.status || "-"}
-                                            </span>
-                                        </td>
-                                        <td>{task.dueDate || "-"}</td>
-                                        <td>
-                                            {task.dueTime
-                                                ? `${task.dueTime} ${task.meridiem || ""}`
-                                                : "-"}
-                                        </td>
-                                    </tr>
-                                ))}
+
+                                {tasks.map(
+                                    (task, index) => (
+
+                                        <tr key={task.id}>
+
+                                            <td>
+                                                {page * limit +
+                                                    index +
+                                                    1}
+                                            </td>
+
+                                            <td className="task-title-cell">
+
+                                                {task.title ||
+                                                    task.name ||
+                                                    "-"}
+
+                                            </td>
+
+                                            <td className="task-description-cell">
+
+                                                {task.description ||
+                                                    task.content ||
+                                                    "-"}
+
+                                            </td>
+
+                                            <td>
+
+                                                <span
+                                                    className={
+                                                        `priority-badge priority-${task.priority?.toLowerCase()}`
+                                                    }
+                                                >
+                                                    {task.priority ||
+                                                        "-"}
+                                                </span>
+
+                                            </td>
+
+                                            <td>
+
+                                                <span
+                                                    className={
+                                                        `status-badge status-${task.status?.toLowerCase()}`
+                                                    }
+                                                >
+                                                    {task.status ||
+                                                        "-"}
+                                                </span>
+
+                                            </td>
+
+                                            <td>
+                                                {task.dueDate ||
+                                                    "-"}
+                                            </td>
+
+                                            <td>
+
+                                                {task.dueTime
+                                                    ? `${task.dueTime} ${task.meridiem || ""}`
+                                                    : "-"}
+
+                                            </td>
+
+                                        </tr>
+
+                                    )
+                                )}
+
                             </tbody>
+
                         </table>
+
                     </div>
 
-                    {/* PAGINATION */}
                     <div className="pagination-container">
+
                         <button
                             type="button"
                             className="pagination-button"
                             onClick={handlePrevious}
-                            disabled={pageNumber === 1 || loading}
+                            disabled={
+                                page === 0 ||
+                                loading
+                            }
                         >
                             Previous
                         </button>
@@ -347,20 +426,31 @@ function GetAllTask() {
                             className="page-number-button active"
                             disabled
                         >
-                            {pageNumber}
+                            {page + 1}
                         </button>
 
                         <button
                             type="button"
                             className="pagination-button"
                             onClick={handleNext}
-                            disabled={!nextLastId || loading}
+                            disabled={
+                                page + 1 >= totalPages ||
+                                loading
+                            }
                         >
                             Next
                         </button>
+
                     </div>
+
+                    <div className="task-total">
+                        Total Tasks: {totalElements}
+                    </div>
+
                 </>
+
             )}
+
         </div>
     );
 }
